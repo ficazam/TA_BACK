@@ -8,14 +8,3 @@ export interface Item {
   ordered: number;
   isTemporal: boolean;
 }
-
-export const emptyItem: Item = {
-  id: '',
-  image: '',
-  name: '',
-  type: '',
-  inStock: 0,
-  ordered: 0,
-  isTemporal: false,
-  schoolId: '',
-};

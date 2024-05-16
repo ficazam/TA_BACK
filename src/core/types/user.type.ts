@@ -13,14 +13,3 @@ export interface User {
   status: UserStatus;
   orders: Order[];
 }
-
-export const emptyUser: User = {
-  id: '',
-  image: '',
-  name: '',
-  surname: '',
-  email: '',
-  role: UserRole.Empty,
-  status: UserStatus.Unverified,
-  orders: [],
-};

@@ -11,14 +11,3 @@ export interface Order {
   requiresApproval: boolean;
   items: Item[];
 }
-
-export const emptyOrder: Order = {
-  id: '',
-  creationDate: new Date(),
-  deliveryDate: new Date(),
-  status: OrderStatus.Ordered,
-  requiresApproval: false,
-  teacherId: '',
-  items: [],
-  schoolId: '',
-};

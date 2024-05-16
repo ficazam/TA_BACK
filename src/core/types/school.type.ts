@@ -8,11 +8,3 @@ export interface ISchoolInfo {
   principalId: string;
   employees: string[];
 }
-
-export const emptySchool: ISchoolInfo = {
-  id: '',
-  name: '',
-  status: SchoolStatus.Active,
-  principalId: '',
-  employees: [],
-};
