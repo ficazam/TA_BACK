@@ -54,3 +54,6 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# the service file
+teachers-aid-8ac41-firebase-adminsdk-tw202-397382217d.json
