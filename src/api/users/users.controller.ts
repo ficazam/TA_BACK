@@ -1,13 +1,16 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { getAllUsersDto } from './DTO';
+import { UserRole } from 'src/core/enums/user-role.enum';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  public getUsers(@Body() { schoolId, userRole }: getAllUsersDto) {
+  @Get(':schoolId/:userRole')
+  public getUsers(
+    @Param('schoolId') schoolId: string,
+    @Param('userRole') userRole: UserRole,
+  ) {
     return this.usersService.getAllSchoolUsers(schoolId, userRole);
   }
 
