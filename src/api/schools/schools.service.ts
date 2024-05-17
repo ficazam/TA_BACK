@@ -87,4 +87,18 @@ export class SchoolsService {
       throw new NotFoundException(error, 'Not found');
     }
   }
+
+  public async updateSchool(schoolInfo: ISchoolInfo) {
+    try {
+      await this.firebaseService.setDoc(
+        FirebaseCollections.Schools,
+        schoolInfo,
+        schoolInfo.id,
+      );
+
+      return { success: true };
+    } catch (error) {
+      throw new NotFoundException(error, 'Not found');
+    }
+  }
 }

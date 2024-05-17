@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { SchoolsService } from './schools.service';
 import { createUserDto } from '../users/DTO';
 import { createSchoolDto } from './DTO/create-school.dto';
+import { ISchoolInfo } from 'src/core/types/school.type';
 
 @Controller('schools')
 export class SchoolsController {
@@ -29,5 +30,10 @@ export class SchoolsController {
     },
   ) {
     return this.schoolsService.createNewSchool(newUser, newSchool);
+  }
+
+  @Patch()
+  public async updateSchool(@Body() schoolInfo: ISchoolInfo) {
+    return this.schoolsService.updateSchool(schoolInfo);
   }
 }

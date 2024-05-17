@@ -3,7 +3,12 @@ import { FirebaseCollections } from 'src/core/enums/firebase-collections.enum';
 import { Order } from 'src/core/types/order.type';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { SchoolsService } from '../schools/schools.service';
-import { FirestoreDocument } from 'src/firebase/core/firestore-reference-types.type';
+import {
+  FirestoreDocument,
+  FirestoreDocumentReference,
+} from 'src/firebase/core/firestore-reference-types.type';
+import { createOrderDto } from './DTO/create-order.dto';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class OrdersService {
@@ -69,6 +74,51 @@ export class OrdersService {
       return { success: true, data: orderData.data() };
     } catch (error) {
       throw new NotFoundException(error, 'Not Found');
+    }
+  }
+
+  public async createNewOrder(newOrder: createOrderDto) {
+    try {
+      const order: Order = {
+        ...newOrder,
+        creationDate: new Date(),
+        deliveryDate: new Date(),
+        id: v4(),
+      };
+
+      const schoolReference = await this.schoolService.singleSchoolReference(
+        order.schoolId,
+      );
+
+      const orderReference: FirestoreDocumentReference = schoolReference
+        .collection(FirebaseCollections.Orders)
+        .doc(order.id);
+
+      await orderReference.set(order);
+
+      return { success: true };
+    } catch (error) {
+      throw new NotFoundException(error, 'Not Found');
+    }
+  }
+
+  public async updateOrder(orderInfo: Partial<Order>) {
+    try {
+      const schoolReference = await this.schoolService.singleSchoolReference(
+        orderInfo.schoolId,
+      );
+
+      const orderReference: FirestoreDocumentReference = schoolReference
+        .collection(FirebaseCollections.Orders)
+        .doc(orderInfo.id);
+
+      await orderReference.set(orderInfo);
+
+      //TODO: ADD ERROR VALIDATIONS - EX IF FIELDS ARE EMPTY
+      return { success: true };
+    } catch (error) {
+      console.log(error);
+      throw new NotFoundException(error, 'Not found');
     }
   }
 }

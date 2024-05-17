@@ -1,5 +1,7 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { OrdersService } from './orders.service';
+import { createOrderDto } from './DTO/create-order.dto';
+import { Order } from 'src/core/types/order.type';
 
 @Controller('orders')
 export class OrdersController {
@@ -24,5 +26,15 @@ export class OrdersController {
     @Param('orderId') orderId: string,
   ) {
     return this.ordersService.getSingleOrder(schoolId, orderId);
+  }
+
+  @Post()
+  public async createNewOrder(@Body() newOrder: createOrderDto) {
+    return this.ordersService.createNewOrder(newOrder);
+  }
+
+  @Patch()
+  public async updateOrder(@Body() orderInfo: Order) {
+    return this.ordersService.updateOrder(orderInfo);
   }
 }
