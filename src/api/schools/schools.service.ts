@@ -6,6 +6,11 @@ import {
   FirestoreDocumentReference,
 } from 'src/firebase/core/firestore-reference-types.type';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { createSchoolDto } from './DTO/create-school.dto';
+import { createUserDto } from '../users/DTO';
+import { v4 } from 'uuid';
+import { User } from 'src/core/types/user.type';
+import { SchoolStatus } from 'src/core/enums/school-status.enum';
 
 @Injectable()
 export class SchoolsService {
@@ -44,6 +49,40 @@ export class SchoolsService {
       const schoolData = await schoolDataReference.get();
 
       return { success: true, data: schoolData.data() };
+    } catch (error) {
+      throw new NotFoundException(error, 'Not found');
+    }
+  }
+
+  public async createNewSchool(
+    newUser: createUserDto,
+    newSchool: createSchoolDto,
+  ) {
+    try {
+      const user: User = { ...newUser, id: v4() };
+      const school: ISchoolInfo = {
+        ...newSchool,
+        id: v4(),
+        principalId: user.id,
+        employees: [],
+        status: SchoolStatus.Active,
+      };
+
+      school.employees.push(user.id);
+
+      await this.firebaseService.setDoc(
+        FirebaseCollections.Schools,
+        school,
+        school.id,
+      );
+
+      await this.firebaseService.setDoc(
+        FirebaseCollections.Users,
+        user,
+        user.id,
+      );
+
+      return { success: true };
     } catch (error) {
       throw new NotFoundException(error, 'Not found');
     }

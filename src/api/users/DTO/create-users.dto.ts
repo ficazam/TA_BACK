@@ -1,4 +1,10 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { UserRole } from 'src/core/enums/user-role.enum';
 import { UserStatus } from 'src/core/enums/user-status.enum';
 import { Order } from 'src/core/types/order.type';
@@ -25,11 +31,11 @@ export class createUserDto {
   schoolId: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsEnum(UserRole)
   role: UserRole;
 
   @IsNotEmpty()
-  @IsString()
+  @IsEnum(UserStatus)
   status: UserStatus;
 
   @IsOptional()

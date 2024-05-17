@@ -8,10 +8,17 @@ import {
   FirestoreQueryReference,
 } from 'src/firebase/core/firestore-reference-types.type';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { SchoolsService } from '../schools/schools.service';
+import { ISchoolInfo } from 'src/core/types/school.type';
+import { createUserDto } from './DTO';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly firebaseService: FirebaseService) {}
+  constructor(
+    private readonly firebaseService: FirebaseService,
+    private readonly schoolsService: SchoolsService,
+  ) {}
 
   public async getAllSchoolUsers(schoolId: string, userRole: UserRole) {
     const database = this.firebaseService.getFirestore();
@@ -52,16 +59,33 @@ export class UsersService {
     }
   }
 
-  public async createNewUser(newUser: User) {
+  public async createNewUser(newUser: createUserDto) {
     try {
-      //to do: update school
-      await this.firebaseService.setDoc(
-        FirebaseCollections.Users,
-        newUser,
-        newUser.id,
+      const user: User = { ...newUser, id: v4() };
+      const schoolData = await this.schoolsService.getSingleSchool(
+        newUser.schoolId,
       );
 
-      return { succes: true };
+      const school = schoolData.data as ISchoolInfo;
+
+      const schoolUpdate: ISchoolInfo = {
+        ...school,
+        employees: [...school.employees, user.id],
+      };
+
+      await this.firebaseService.setDoc(
+        FirebaseCollections.Schools,
+        schoolUpdate,
+        schoolUpdate.id,
+      );
+
+      await this.firebaseService.setDoc(
+        FirebaseCollections.Users,
+        user,
+        user.id,
+      );
+
+      return { success: true };
     } catch (error) {
       throw new NotFoundException(error, 'Not found');
     }
