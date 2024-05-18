@@ -12,5 +12,8 @@ export class FirebaseService {
   }
 
   //to do: implement
+  public login() {}
+
+  //to do: implement
   public logout() {}
 }
