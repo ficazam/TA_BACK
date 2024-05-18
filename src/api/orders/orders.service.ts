@@ -110,7 +110,6 @@ export class OrdersService {
 
       await orderReference.set(orderInfo);
 
-      //TODO: ADD ERROR VALIDATIONS - EX IF FIELDS ARE EMPTY
       return { success: true };
     } catch (error) {
       console.log(error);

@@ -10,10 +10,4 @@ export class FirebaseService {
   public getFirestore() {
     return getFirebaseInstance().firestore();
   }
-
-  //to do: implement
-  public login() {}
-
-  //to do: implement
-  public logout() {}
 }

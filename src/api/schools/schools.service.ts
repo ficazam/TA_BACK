@@ -96,7 +96,7 @@ export class SchoolsService {
         .getFirestore()
         .collection(FirebaseCollections.Schools)
         .doc(schoolInfo.id)
-        .update({ schoolInfo });
+        .set(schoolInfo);
 
       return { success: true };
     } catch (error) {

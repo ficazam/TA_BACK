@@ -15,6 +15,7 @@ import { FirebaseService } from 'src/firebase/firebase.service';
 import { SchoolsService } from '../schools/schools.service';
 import { ISchoolInfo } from 'src/core/types/school.type';
 import { createUserDto } from './DTO';
+import { loginDto } from './DTO/login.dto';
 
 @Injectable()
 export class UsersService {
@@ -83,22 +84,6 @@ export class UsersService {
       );
 
       const user: User = { ...newUser, id: userRef.uid };
-      const schoolData = await this.schoolsService.getSingleSchool(
-        newUser.schoolId,
-      );
-
-      const school = schoolData.data as ISchoolInfo;
-
-      const schoolUpdate: ISchoolInfo = {
-        ...school,
-        employees: [...school.employees, user.id],
-      };
-
-      await this.firebaseService
-        .getFirestore()
-        .collection(FirebaseCollections.Schools)
-        .doc(schoolUpdate.id)
-        .update({ schoolUpdate });
 
       await this.firebaseService
         .getFirestore()
@@ -106,9 +91,45 @@ export class UsersService {
         .doc(user.id)
         .set(user);
 
+      if (user.schoolId) {
+        const schoolData = await this.schoolsService.getSingleSchool(
+          newUser.schoolId,
+        );
+
+        const school = schoolData.data as ISchoolInfo;
+
+        const schoolUpdate: ISchoolInfo = {
+          ...school,
+          employees: [...school.employees, user.id],
+        };
+
+        await this.firebaseService
+          .getFirestore()
+          .collection(FirebaseCollections.Schools)
+          .doc(schoolUpdate.id)
+          .set(schoolUpdate);
+      }
+
       return { success: true };
     } catch (error) {
       throw new NotFoundException(error, 'Not found');
+    }
+  }
+
+  //to do: implement
+  public async userLogin(loginBody: loginDto) {
+    try {
+      const { email, password } = loginBody;
+    } catch (error) {
+      throw new InternalServerErrorException(error, 'Error Signing In');
+    }
+  }
+
+  //to do: implement
+  public async userLogout() {
+    try {
+    } catch (error) {
+      throw new InternalServerErrorException(error, 'Error logging user out.');
     }
   }
 }
