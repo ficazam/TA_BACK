@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { FirebaseCollections } from 'src/core/enums/firebase-collections.enum';
 import { UserRole } from 'src/core/enums/user-role.enum';
 import { User } from 'src/core/types/user.type';
@@ -11,7 +15,6 @@ import { FirebaseService } from 'src/firebase/firebase.service';
 import { SchoolsService } from '../schools/schools.service';
 import { ISchoolInfo } from 'src/core/types/school.type';
 import { createUserDto } from './DTO';
-import { v4 } from 'uuid';
 
 @Injectable()
 export class UsersService {
@@ -48,6 +51,7 @@ export class UsersService {
   public async getSingleUser(userId: string) {
     try {
       const userReference = this.firebaseService
+        .getFirestore()
         .collection(FirebaseCollections.Users)
         .doc(userId);
 
@@ -59,9 +63,26 @@ export class UsersService {
     }
   }
 
+  private async createAuthUser(email: string, password: string) {
+    try {
+      const auth = await this.firebaseService.getAuth();
+
+      const userRef = await auth.createUser({ email, password });
+
+      return userRef;
+    } catch (error) {
+      throw new InternalServerErrorException('Internal Server Error');
+    }
+  }
+
   public async createNewUser(newUser: createUserDto) {
     try {
-      const user: User = { ...newUser, id: v4() };
+      const userRef = await this.createAuthUser(
+        newUser.email,
+        newUser.password,
+      );
+
+      const user: User = { ...newUser, id: userRef.uid };
       const schoolData = await this.schoolsService.getSingleSchool(
         newUser.schoolId,
       );
@@ -73,17 +94,17 @@ export class UsersService {
         employees: [...school.employees, user.id],
       };
 
-      await this.firebaseService.setDoc(
-        FirebaseCollections.Schools,
-        schoolUpdate,
-        schoolUpdate.id,
-      );
+      await this.firebaseService
+        .getFirestore()
+        .collection(FirebaseCollections.Schools)
+        .doc(schoolUpdate.id)
+        .update({ schoolUpdate });
 
-      await this.firebaseService.setDoc(
-        FirebaseCollections.Users,
-        user,
-        user.id,
-      );
+      await this.firebaseService
+        .getFirestore()
+        .collection(FirebaseCollections.Users)
+        .doc(user.id)
+        .set(user);
 
       return { success: true };
     } catch (error) {
