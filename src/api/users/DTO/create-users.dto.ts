@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsDefined,
   IsEnum,
   IsNotEmpty,
   IsOptional,
@@ -11,18 +12,22 @@ import { UserStatus } from 'src/core/enums/user-status.enum';
 import { Order } from 'src/core/types/order.type';
 
 export class createUserDto {
+  @IsDefined()
   @IsNotEmpty()
   @IsString()
   name: string;
 
+  @IsDefined()
   @IsNotEmpty()
   @IsString()
   surname: string;
 
+  @IsDefined()
   @IsNotEmpty()
   @IsString()
   email: string;
 
+  @IsDefined()
   @IsNotEmpty()
   @IsStrongPassword()
   password: string;
@@ -35,10 +40,12 @@ export class createUserDto {
   @IsString()
   schoolId: string;
 
+  @IsDefined()
   @IsNotEmpty()
   @IsEnum(UserRole)
   role: UserRole;
 
+  @IsDefined()
   @IsNotEmpty()
   @IsEnum(UserStatus)
   status: UserStatus;

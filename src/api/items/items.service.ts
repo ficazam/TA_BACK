@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -6,7 +7,10 @@ import {
 import { SchoolsService } from '../schools/schools.service';
 import { Item } from 'src/core/types/item.type';
 import { FirebaseCollections } from 'src/core/enums/firebase-collections.enum';
-import { FirestoreDocument } from 'src/firebase/core/firestore-reference-types.type';
+import {
+  FirestoreDocument,
+  FirestoreDocumentReference,
+} from 'src/firebase/core/firestore-reference-types.type';
 import { createItemDto } from './DTO/create-item.dto';
 import { v4 } from 'uuid';
 
@@ -50,6 +54,19 @@ export class ItemsService {
   }
 
   public async createNewItem(newItem: createItemDto) {
+    if (
+      !newItem.name ||
+      !newItem.type ||
+      !newItem.schoolId ||
+      !newItem.inStock ||
+      newItem.ordered === undefined ||
+      newItem.isTemporal === undefined
+    ) {
+      throw new BadRequestException(
+        'Incomplete item data, please fill in all fields.',
+      );
+    }
+
     try {
       const item: Item = { ...newItem, id: v4() };
       const schoolReference = await this.schoolService.singleSchoolReference(
@@ -69,16 +86,37 @@ export class ItemsService {
   }
 
   public async updateItem(itemInfo: Item) {
+    if (!itemInfo.id) {
+      throw new BadRequestException('No item to find');
+    }
+
+    if (!itemInfo.schoolId) {
+      throw new BadRequestException('No school to find');
+    }
+
+    const doesSchoolExistData = await this.schoolService.doesSchoolExist(
+      itemInfo.schoolId,
+    );
+    const doesSchoolExist = doesSchoolExistData.data;
+
+    if (!doesSchoolExist) {
+      throw new NotFoundException('School not found!');
+    }
+
     try {
-      const schoolReference = await this.schoolService.singleSchoolReference(
-        itemInfo.schoolId,
-      );
-      const itemReference = schoolReference
+      const schoolReference: FirestoreDocumentReference =
+        await this.schoolService.singleSchoolReference(itemInfo.schoolId);
+
+      const itemReference: FirestoreDocumentReference = schoolReference
         .collection(FirebaseCollections.Items)
         .doc(itemInfo.id);
 
-      await itemReference.set(itemInfo);
+      const oldItemData = await itemReference.get();
+      const oldItem = oldItemData.data();
 
+      const newItemInfo = { ...oldItem, ...itemInfo };
+
+      await itemReference.set(newItemInfo);
       return { success: true };
     } catch (error) {
       throw new InternalServerErrorException('Internal server error');

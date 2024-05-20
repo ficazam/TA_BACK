@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { FirebaseCollections } from 'src/core/enums/firebase-collections.enum';
 import { ISchoolInfo } from 'src/core/types/school.type';
 import {
@@ -11,10 +17,17 @@ import { v4 } from 'uuid';
 import { User } from 'src/core/types/user.type';
 import { SchoolStatus } from 'src/core/enums/school-status.enum';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { UserRole } from 'src/core/enums/user-role.enum';
+import { UserStatus } from 'src/core/enums/user-status.enum';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class SchoolsService {
-  constructor(private readonly firebaseService: FirebaseService) {}
+  constructor(
+    @Inject(forwardRef(() => UsersService))
+    private readonly userService: UsersService,
+    private readonly firebaseService: FirebaseService,
+  ) {}
 
   public async getAllSchools() {
     try {
@@ -49,10 +62,15 @@ export class SchoolsService {
         await this.singleSchoolReference(schoolId);
 
       const schoolData = await schoolDataReference.get();
+      const school = schoolData.data();
 
-      return { success: true, data: schoolData.data() };
+      if (!school) {
+        throw new NotFoundException('School data not found.');
+      }
+
+      return { success: true, data: school };
     } catch (error) {
-      throw new NotFoundException(error, 'Not found');
+      throw new NotFoundException(error.response.message);
     }
   }
 
@@ -60,11 +78,40 @@ export class SchoolsService {
     newUser: createUserDto,
     newSchool: createSchoolDto,
   ) {
+    if (!newSchool || newSchool.name === undefined || !newSchool.name) {
+      throw new BadRequestException(
+        'Incomplete school - please fill in all fields.',
+      );
+    }
+
+    if (!newUser) {
+      throw new BadRequestException(
+        'Incomplete user - please fill in all fields.',
+      );
+    }
+
+    const doesSchoolExistData = await this.doesSchoolExist(newSchool.name);
+    const doesSchoolExist = doesSchoolExistData.data;
+
+    if (doesSchoolExist) {
+      throw new BadRequestException('School already exists');
+    }
+
     try {
-      const user: User = { ...newUser, id: v4() };
+      const schoolId: string = v4();
+
+      const userData: createUserDto = {
+        ...newUser,
+        role: UserRole.Principal,
+        status: UserStatus.Inactive,
+      };
+
+      const userRef = await this.userService.createNewUser(userData);
+      const user: User = userRef.data;
+
       const school: ISchoolInfo = {
         ...newSchool,
-        id: v4(),
+        id: schoolId,
         principalId: user.id,
         employees: [],
         status: SchoolStatus.Active,
@@ -78,11 +125,7 @@ export class SchoolsService {
         .doc(school.id)
         .set(school);
 
-      await this.firebaseService
-        .getFirestore()
-        .collection(FirebaseCollections.Users)
-        .doc(user.id)
-        .set(user);
+      await this.userService.updateUser({ id: user.id, schoolId: school.id });
 
       return { success: true };
     } catch (error) {
@@ -101,6 +144,21 @@ export class SchoolsService {
       return { success: true };
     } catch (error) {
       throw new NotFoundException(error, 'Not found');
+    }
+  }
+
+  public async doesSchoolExist(schoolName: string) {
+    try {
+      const schoolsDataReference = await this.getAllSchools();
+      const schoolsData = schoolsDataReference.data;
+
+      const findSchool = schoolsData.find(
+        (school) => school.name === schoolName || school.id === schoolName,
+      );
+
+      return { success: true, data: Boolean(findSchool) };
+    } catch (error) {
+      throw new BadRequestException(error.response.message);
     }
   }
 }

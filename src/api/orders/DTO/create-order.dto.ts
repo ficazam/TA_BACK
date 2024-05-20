@@ -7,7 +7,6 @@ import {
   IsString,
 } from 'class-validator';
 import { OrderStatus } from 'src/core/enums/order-status.enum';
-import { Item } from 'src/core/types/item.type';
 
 export class createOrderDto {
   @IsDate()
@@ -31,5 +30,5 @@ export class createOrderDto {
   requiresApproval: boolean;
 
   @IsArray()
-  items: Item[];
+  items: { itemId: string; amount: number }[];
 }

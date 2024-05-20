@@ -7,7 +7,7 @@ import { createUserDto } from './DTO';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get(':schoolId/:userRole')
+  @Get('school/:schoolId/:userRole')
   public getUsers(
     @Param('schoolId') schoolId: string,
     @Param('userRole') userRole: UserRole,
@@ -15,7 +15,7 @@ export class UsersController {
     return this.usersService.getAllSchoolUsers(schoolId, userRole);
   }
 
-  @Get(':userId')
+  @Get('user/:userId')
   public getSingleUser(@Param('userId') id: string) {
     return this.usersService.getSingleUser(id);
   }

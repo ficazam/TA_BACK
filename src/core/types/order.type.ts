@@ -1,5 +1,4 @@
 import { OrderStatus } from '../enums/order-status.enum';
-import { Item } from './item.type';
 
 export interface Order {
   id: string;
@@ -9,5 +8,5 @@ export interface Order {
   schoolId: string;
   teacherId: string;
   requiresApproval: boolean;
-  items: Item[];
+  items: { itemId: string; amount: number }[];
 }
