@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsStrongPassword,
 } from 'class-validator';
 import { UserRole } from 'src/core/enums/user-role.enum';
 import { UserStatus } from 'src/core/enums/user-status.enum';
@@ -21,6 +22,10 @@ export class createUserDto {
   @IsNotEmpty()
   @IsString()
   email: string;
+
+  @IsNotEmpty()
+  @IsStrongPassword()
+  password: string;
 
   @IsOptional()
   @IsString()

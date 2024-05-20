@@ -5,12 +5,12 @@ import {
   FirestoreCollectionSnapshot,
   FirestoreDocumentReference,
 } from 'src/firebase/core/firestore-reference-types.type';
-import { FirebaseService } from 'src/firebase/firebase.service';
 import { createSchoolDto } from './DTO/create-school.dto';
 import { createUserDto } from '../users/DTO';
 import { v4 } from 'uuid';
 import { User } from 'src/core/types/user.type';
 import { SchoolStatus } from 'src/core/enums/school-status.enum';
+import { FirebaseService } from 'src/firebase/firebase.service';
 
 @Injectable()
 export class SchoolsService {
@@ -20,6 +20,7 @@ export class SchoolsService {
     try {
       const schools: ISchoolInfo[] = [];
       const schoolData: FirestoreCollectionSnapshot = await this.firebaseService
+        .getFirestore()
         .collection(FirebaseCollections.Schools)
         .get();
 
@@ -35,6 +36,7 @@ export class SchoolsService {
 
   public async singleSchoolReference(schoolId: string) {
     const schoolReference: FirestoreDocumentReference = this.firebaseService
+      .getFirestore()
       .collection(FirebaseCollections.Schools)
       .doc(schoolId);
 
@@ -70,17 +72,17 @@ export class SchoolsService {
 
       school.employees.push(user.id);
 
-      await this.firebaseService.setDoc(
-        FirebaseCollections.Schools,
-        school,
-        school.id,
-      );
+      await this.firebaseService
+        .getFirestore()
+        .collection(FirebaseCollections.Schools)
+        .doc(school.id)
+        .set(school);
 
-      await this.firebaseService.setDoc(
-        FirebaseCollections.Users,
-        user,
-        user.id,
-      );
+      await this.firebaseService
+        .getFirestore()
+        .collection(FirebaseCollections.Users)
+        .doc(user.id)
+        .set(user);
 
       return { success: true };
     } catch (error) {
@@ -90,11 +92,11 @@ export class SchoolsService {
 
   public async updateSchool(schoolInfo: ISchoolInfo) {
     try {
-      await this.firebaseService.setDoc(
-        FirebaseCollections.Schools,
-        schoolInfo,
-        schoolInfo.id,
-      );
+      await this.firebaseService
+        .getFirestore()
+        .collection(FirebaseCollections.Schools)
+        .doc(schoolInfo.id)
+        .set(schoolInfo);
 
       return { success: true };
     } catch (error) {

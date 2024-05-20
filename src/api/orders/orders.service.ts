@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { FirebaseCollections } from 'src/core/enums/firebase-collections.enum';
 import { Order } from 'src/core/types/order.type';
-import { FirebaseService } from 'src/firebase/firebase.service';
 import { SchoolsService } from '../schools/schools.service';
 import {
   FirestoreDocument,
@@ -12,10 +11,7 @@ import { v4 } from 'uuid';
 
 @Injectable()
 export class OrdersService {
-  constructor(
-    private readonly firebaseService: FirebaseService,
-    private readonly schoolService: SchoolsService,
-  ) {}
+  constructor(private readonly schoolService: SchoolsService) {}
 
   public async getAllOrders(schoolId: string) {
     try {
@@ -114,7 +110,6 @@ export class OrdersService {
 
       await orderReference.set(orderInfo);
 
-      //TODO: ADD ERROR VALIDATIONS - EX IF FIELDS ARE EMPTY
       return { success: true };
     } catch (error) {
       console.log(error);
