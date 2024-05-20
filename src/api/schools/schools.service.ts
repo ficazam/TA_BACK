@@ -78,9 +78,15 @@ export class SchoolsService {
     newUser: createUserDto,
     newSchool: createSchoolDto,
   ) {
-    if (!newSchool.name) {
+    if (!newSchool || newSchool.name === undefined || !newSchool.name) {
       throw new BadRequestException(
         'Incomplete school - please fill in all fields.',
+      );
+    }
+
+    if (!newUser) {
+      throw new BadRequestException(
+        'Incomplete user - please fill in all fields.',
       );
     }
 
