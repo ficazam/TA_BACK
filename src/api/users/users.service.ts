@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -16,6 +17,7 @@ import { SchoolsService } from '../schools/schools.service';
 import { ISchoolInfo } from 'src/core/types/school.type';
 import { createUserDto } from './DTO';
 import { loginDto } from './DTO/login.dto';
+import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 
 @Injectable()
 export class UsersService {
@@ -27,63 +29,94 @@ export class UsersService {
   public async getAllSchoolUsers(schoolId: string, userRole: UserRole) {
     const database = this.firebaseService.getFirestore();
 
-    try {
-      const users: User[] = [];
-      const userReference: FirestoreQueryReference = database.collection(
-        FirebaseCollections.Users,
-      );
-      const usersSnapshot: FirestoreCollectionSnapshot =
-        await userReference.get();
+    const users: User[] = [];
+    const userReference: FirestoreQueryReference = database.collection(
+      FirebaseCollections.Users,
+    );
 
-      usersSnapshot.forEach((document) => {
-        const user: User = document.data() as User;
+    const usersSnapshot: FirestoreCollectionSnapshot =
+      await userReference.get();
 
-        if (schoolId === user.schoolId && userRole === user.role) {
-          users.push(user);
-        }
-      });
+    usersSnapshot.forEach((document) => {
+      const user: User = document.data() as User;
 
-      return { success: true, data: users };
-    } catch (error) {
-      throw new NotFoundException(error, 'Not found');
+      if (schoolId === user.schoolId && userRole === user.role) {
+        users.push(user);
+      }
+    });
+
+    if (!users.length) {
+      throw new NotFoundException('Users not found.');
     }
+
+    return { success: true, data: users };
   }
 
   public async getSingleUser(userId: string) {
-    try {
-      const userReference = this.firebaseService
-        .getFirestore()
-        .collection(FirebaseCollections.Users)
-        .doc(userId);
+    const userReference = this.firebaseService
+      .getFirestore()
+      .collection(FirebaseCollections.Users)
+      .doc(userId);
 
-      const userData: FirestoreDocument = await userReference.get();
+    const userData: FirestoreDocument = await userReference.get();
+    const user: User = userData.data() as User;
 
-      return { success: true, data: userData.data() };
-    } catch (error) {
-      throw new NotFoundException(error, 'Not found');
+    if (!user) {
+      throw new NotFoundException('User not found.');
     }
+
+    return { success: true, data: user };
   }
 
   private async createAuthUser(email: string, password: string) {
     try {
-      const auth = await this.firebaseService.getAuth();
+      const auth = this.firebaseService.getAuth();
 
-      const userRef = await auth.createUser({ email, password });
+      const userRef: UserRecord = await auth.createUser({ email, password });
 
       return userRef;
     } catch (error) {
-      throw new InternalServerErrorException('Internal Server Error');
+      throw new BadRequestException(error.message);
     }
   }
 
   public async createNewUser(newUser: createUserDto) {
+    if (
+      !newUser.email ||
+      !newUser.password ||
+      !newUser.name ||
+      !newUser.surname ||
+      !newUser.role ||
+      !newUser.status ||
+      (newUser.role !== UserRole.Admin &&
+        newUser.role !== UserRole.Principal &&
+        !newUser.schoolId)
+    ) {
+      throw new BadRequestException(
+        'Incomplete user - please fill in all fields.',
+      );
+    }
+
     try {
       const userRef = await this.createAuthUser(
         newUser.email,
         newUser.password,
       );
 
-      const user: User = { ...newUser, id: userRef.uid };
+      if (!userRef) {
+        throw new InternalServerErrorException('Error creating user!');
+      }
+
+      const user: User = {
+        id: userRef.uid,
+        email: newUser.email,
+        name: newUser.name,
+        surname: newUser.surname,
+        role: newUser.role,
+        status: newUser.status,
+        schoolId: newUser.schoolId,
+        orders: [],
+      };
 
       await this.firebaseService
         .getFirestore()
@@ -110,9 +143,28 @@ export class UsersService {
           .set(schoolUpdate);
       }
 
+      return { success: true, data: user };
+    } catch (error) {
+      throw new InternalServerErrorException(error.response.message);
+    }
+  }
+
+  public async updateUser(userData: Partial<User>) {
+    try {
+      const existingUserData = await this.getSingleUser(userData.id!);
+      const existingUser = existingUserData.data;
+
+      const newUserData: User = { ...userData, ...existingUser } as User;
+
+      await this.firebaseService
+        .getFirestore()
+        .collection(FirebaseCollections.Users)
+        .doc(newUserData.id)
+        .set(newUserData);
+
       return { success: true };
     } catch (error) {
-      throw new NotFoundException(error, 'Not found');
+      throw new BadRequestException(error.response.message);
     }
   }
 

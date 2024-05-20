@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -50,6 +51,19 @@ export class ItemsService {
   }
 
   public async createNewItem(newItem: createItemDto) {
+    if (
+      !newItem.name ||
+      !newItem.type ||
+      !newItem.schoolId ||
+      !newItem.inStock ||
+      !newItem.ordered ||
+      !newItem.isTemporal
+    ) {
+      throw new BadRequestException(
+        'Incomplete item data, please fill in all fields.',
+      );
+    }
+
     try {
       const item: Item = { ...newItem, id: v4() };
       const schoolReference = await this.schoolService.singleSchoolReference(
@@ -77,8 +91,12 @@ export class ItemsService {
         .collection(FirebaseCollections.Items)
         .doc(itemInfo.id);
 
-      await itemReference.set(itemInfo);
+      const oldItemData = await itemReference.get();
+      const oldItem = oldItemData.data();
 
+      const newItemInfo = { ...oldItem, ...itemInfo };
+
+      await itemReference.set(newItemInfo);
       return { success: true };
     } catch (error) {
       throw new InternalServerErrorException('Internal server error');

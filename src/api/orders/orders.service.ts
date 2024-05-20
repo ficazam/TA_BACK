@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { FirebaseCollections } from 'src/core/enums/firebase-collections.enum';
 import { Order } from 'src/core/types/order.type';
 import { SchoolsService } from '../schools/schools.service';
@@ -74,6 +78,19 @@ export class OrdersService {
   }
 
   public async createNewOrder(newOrder: createOrderDto) {
+    if (
+      !newOrder.deliveryDate ||
+      !newOrder.status ||
+      !newOrder.schoolId ||
+      !newOrder.teacherId ||
+      !newOrder.requiresApproval ||
+      !newOrder.items
+    ) {
+      throw new BadRequestException(
+        'Incomplete order - please fill in all fields.',
+      );
+    }
+
     try {
       const order: Order = {
         ...newOrder,
@@ -108,7 +125,12 @@ export class OrdersService {
         .collection(FirebaseCollections.Orders)
         .doc(orderInfo.id);
 
-      await orderReference.set(orderInfo);
+      const oldOrderData = await orderReference.get();
+      const oldOrder = oldOrderData.data();
+
+      const newOrderInfo = { ...oldOrder, ...orderInfo };
+
+      await orderReference.set(newOrderInfo);
 
       return { success: true };
     } catch (error) {
