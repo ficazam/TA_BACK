@@ -141,13 +141,13 @@ export class SchoolsService {
     }
   }
 
-  private async doesSchoolExist(schoolName: string) {
+  public async doesSchoolExist(schoolName: string) {
     try {
       const schoolsDataReference = await this.getAllSchools();
       const schoolsData = schoolsDataReference.data;
 
       const findSchool = schoolsData.find(
-        (school) => school.name === schoolName,
+        (school) => school.name === schoolName || school.id === schoolName,
       );
 
       return { success: true, data: Boolean(findSchool) };

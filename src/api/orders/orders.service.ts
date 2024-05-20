@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { FirebaseCollections } from 'src/core/enums/firebase-collections.enum';
@@ -12,10 +13,16 @@ import {
 } from 'src/firebase/core/firestore-reference-types.type';
 import { createOrderDto } from './DTO/create-order.dto';
 import { v4 } from 'uuid';
+import { ItemsService } from '../items/items.service';
+import { Item } from 'src/core/types/item.type';
+import { OrderStatus } from 'src/core/enums/order-status.enum';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly schoolService: SchoolsService) {}
+  constructor(
+    private readonly schoolService: SchoolsService,
+    private readonly itemService: ItemsService,
+  ) {}
 
   public async getAllOrders(schoolId: string) {
     try {
@@ -80,11 +87,10 @@ export class OrdersService {
   public async createNewOrder(newOrder: createOrderDto) {
     if (
       !newOrder.deliveryDate ||
-      !newOrder.status ||
       !newOrder.schoolId ||
       !newOrder.teacherId ||
-      !newOrder.requiresApproval ||
-      !newOrder.items
+      newOrder.requiresApproval === undefined ||
+      newOrder.items === undefined
     ) {
       throw new BadRequestException(
         'Incomplete order - please fill in all fields.',
@@ -94,6 +100,7 @@ export class OrdersService {
     try {
       const order: Order = {
         ...newOrder,
+        status: OrderStatus.Ordered,
         creationDate: new Date(),
         deliveryDate: new Date(),
         id: v4(),
@@ -102,6 +109,25 @@ export class OrdersService {
       const schoolReference = await this.schoolService.singleSchoolReference(
         order.schoolId,
       );
+
+      for (const item of order.items) {
+        if (!item.itemId) {
+          throw new NotFoundException('Item not found!');
+        }
+
+        const itemData = await this.itemService.getSingleItem(
+          order.schoolId,
+          item.itemId,
+        );
+
+        const dbItem: Item = itemData.data as Item;
+        const newItem: Item = {
+          ...dbItem,
+          ordered: dbItem.ordered + item.amount,
+        };
+
+        await this.itemService.updateItem(newItem);
+      }
 
       const orderReference: FirestoreDocumentReference = schoolReference
         .collection(FirebaseCollections.Orders)
@@ -116,6 +142,14 @@ export class OrdersService {
   }
 
   public async updateOrder(orderInfo: Partial<Order>) {
+    if (!orderInfo.id) {
+      throw new NotFoundException('Order not found!');
+    }
+
+    if (!orderInfo.schoolId) {
+      throw new NotFoundException('School not found!');
+    }
+
     try {
       const schoolReference = await this.schoolService.singleSchoolReference(
         orderInfo.schoolId,
@@ -134,8 +168,7 @@ export class OrdersService {
 
       return { success: true };
     } catch (error) {
-      console.log(error);
-      throw new NotFoundException(error, 'Not found');
+      throw new InternalServerErrorException(error);
     }
   }
 }
