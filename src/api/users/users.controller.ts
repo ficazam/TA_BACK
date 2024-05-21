@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Patch } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserRole } from 'src/core/enums/user-role.enum';
 import { createUserDto } from './DTO';
+import { User } from 'src/core/types/user.type';
 
 @Controller('users')
 export class UsersController {
@@ -23,5 +24,20 @@ export class UsersController {
   @Post()
   public addNewUser(@Body() newUser: createUserDto) {
     return this.usersService.createNewUser(newUser);
+  }
+
+  @Patch()
+  public updateUser(@Body() userInfo: Partial<User>) {
+    return this.usersService.updateUser(userInfo);
+  }
+
+  @Post('login')
+  public loginUser(@Body() user: User) {
+    return this.usersService.userLogin(user);
+  }
+
+  @Post('logout')
+  public logoutUser(@Body() user: User) {
+    return this.usersService.userLogout(user);
   }
 }
