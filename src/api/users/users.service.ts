@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { FirebaseCollections } from 'src/core/enums/firebase-collections.enum';
 import { UserRole } from 'src/core/enums/user-role.enum';
@@ -16,8 +17,8 @@ import { FirebaseService } from 'src/firebase/firebase.service';
 import { SchoolsService } from '../schools/schools.service';
 import { ISchoolInfo } from 'src/core/types/school.type';
 import { createUserDto } from './DTO';
-import { loginDto } from './DTO/login.dto';
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
+import { UserStatus } from 'src/core/enums/user-status.enum';
 
 @Injectable()
 export class UsersService {
@@ -169,17 +170,36 @@ export class UsersService {
   }
 
   //to do: implement
-  public async userLogin(loginBody: loginDto) {
+  public async userLogin(user: User) {
     try {
-      const { email, password } = loginBody;
+      const { role, schoolId, status } = user;
+
+      if (role !== UserRole.Admin) {
+        const schoolExistsData =
+          await this.schoolsService.doesSchoolExist(schoolId);
+        const schoolExists = schoolExistsData.data;
+
+        if (!schoolExists) {
+          throw new NotFoundException('School not found!');
+        }
+      }
+
+      switch (status) {
+        case UserStatus.Active:
+        case UserStatus.Unverified:
+          return { success: true, data: user };
+        case UserStatus.Inactive:
+          throw new UnauthorizedException('This account is inactive.');
+      }
     } catch (error) {
       throw new InternalServerErrorException(error, 'Error Signing In');
     }
   }
 
   //to do: implement
-  public async userLogout() {
+  public async userLogout(user: User) {
     try {
+      await this.firebaseService.getAuth().revokeRefreshTokens(user.id);
     } catch (error) {
       throw new InternalServerErrorException(error, 'Error logging user out.');
     }
