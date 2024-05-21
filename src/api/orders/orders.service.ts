@@ -16,6 +16,7 @@ import { v4 } from 'uuid';
 import { ItemsService } from '../items/items.service';
 import { Item } from 'src/core/types/item.type';
 import { OrderStatus } from 'src/core/enums/order-status.enum';
+import { orderValidations } from 'src/core/utils/order-validations.util';
 
 @Injectable()
 export class OrdersService {
@@ -85,13 +86,7 @@ export class OrdersService {
   }
 
   public async createNewOrder(newOrder: createOrderDto) {
-    if (
-      !newOrder.deliveryDate ||
-      !newOrder.schoolId ||
-      !newOrder.teacherId ||
-      newOrder.requiresApproval === undefined ||
-      newOrder.items === undefined
-    ) {
+    if (!orderValidations(newOrder)) {
       throw new BadRequestException(
         'Incomplete order - please fill in all fields.',
       );

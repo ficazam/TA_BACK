@@ -19,6 +19,7 @@ import { ISchoolInfo } from 'src/core/types/school.type';
 import { createUserDto } from './DTO';
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { UserStatus } from 'src/core/enums/user-status.enum';
+import { userValidations } from 'src/core/utils/user-validations.util';
 
 @Injectable()
 export class UsersService {
@@ -82,17 +83,7 @@ export class UsersService {
   }
 
   public async createNewUser(newUser: createUserDto) {
-    if (
-      !newUser.email ||
-      !newUser.password ||
-      !newUser.name ||
-      !newUser.surname ||
-      !newUser.role ||
-      !newUser.status ||
-      (newUser.role !== UserRole.Admin &&
-        newUser.role !== UserRole.Principal &&
-        !newUser.schoolId)
-    ) {
+    if (!userValidations(newUser)) {
       throw new BadRequestException(
         'Incomplete user - please fill in all fields.',
       );
