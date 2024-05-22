@@ -169,9 +169,11 @@ export class UsersService {
     }
   }
 
-  //to do: implement
-  public async userLogin(user: User) {
+  public async userLogin(userId) {
     try {
+      const userData = await this.getSingleUser(userId);
+      const user = userData.data;
+
       const { role, schoolId, status } = user;
 
       if (role !== UserRole.Admin) {
@@ -196,7 +198,6 @@ export class UsersService {
     }
   }
 
-  //to do: implement
   public async userLogout(user: User) {
     try {
       await this.firebaseService.getAuth().revokeRefreshTokens(user.id);
