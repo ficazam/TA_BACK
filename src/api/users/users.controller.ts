@@ -32,8 +32,8 @@ export class UsersController {
   }
 
   @Post('login')
-  public loginUser(@Body() user: User) {
-    return this.usersService.userLogin(user);
+  public loginUser(@Body() { userId }: { userId: string }) {
+    return this.usersService.userLogin(userId);
   }
 
   @Post('logout')
