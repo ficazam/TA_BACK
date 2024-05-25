@@ -27,7 +27,7 @@ export class UsersService {
     private readonly schoolsService: SchoolsService,
   ) {}
 
-  public async getAllSchoolUsers(schoolId: string, userRole: UserRole) {
+  public async getAllSchoolUsers(schoolId: string) {
     const database = this.firebaseService.getFirestore();
 
     const users: User[] = [];
@@ -41,7 +41,7 @@ export class UsersService {
     usersSnapshot.forEach((document) => {
       const user: User = document.data() as User;
 
-      if (schoolId === user.schoolId && userRole === user.role) {
+      if (schoolId === user.schoolId) {
         users.push(user);
       }
     });
@@ -194,6 +194,7 @@ export class UsersService {
           throw new UnauthorizedException('This account is inactive.');
       }
     } catch (error) {
+      console.log('===', error);
       throw new InternalServerErrorException(error, 'Error Signing In');
     }
   }
