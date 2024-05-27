@@ -1,6 +1,5 @@
 import { Body, Controller, Get, Param, Post, Patch } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UserRole } from 'src/core/enums/user-role.enum';
 import { createUserDto } from './DTO';
 import { User } from 'src/core/types/user.type';
 
@@ -8,12 +7,9 @@ import { User } from 'src/core/types/user.type';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('school/:schoolId/:userRole')
-  public getUsers(
-    @Param('schoolId') schoolId: string,
-    @Param('userRole') userRole: UserRole,
-  ) {
-    return this.usersService.getAllSchoolUsers(schoolId, userRole);
+  @Get('school/:schoolId')
+  public getUsers(@Param('schoolId') schoolId: string) {
+    return this.usersService.getAllSchoolUsers(schoolId);
   }
 
   @Get('user/:userId')
@@ -32,8 +28,8 @@ export class UsersController {
   }
 
   @Post('login')
-  public loginUser(@Body() user: User) {
-    return this.usersService.userLogin(user);
+  public loginUser(@Body() { userId }: { userId: string }) {
+    return this.usersService.userLogin(userId);
   }
 
   @Post('logout')
