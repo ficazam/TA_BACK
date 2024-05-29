@@ -104,6 +104,7 @@ export class OrdersService {
         ...newOrder,
         status: OrderStatus.Ordered,
         creationDate: new Date(),
+        deliveryDate: new Date(newOrder.deliveryDate),
         id: v4(),
       };
 
