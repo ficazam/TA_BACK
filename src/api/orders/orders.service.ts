@@ -47,15 +47,17 @@ export class OrdersService {
         allOrders.push(modifiedOrderItem);
       });
 
-      return { success: true, data: allOrders };
+      const sortedOrders = allOrders.sort(
+        (a, b) => b.creationDate.getTime() - a.creationDate.getTime(),
+      );
+
+      return { success: true, data: sortedOrders };
     } catch (error) {
       throw new NotFoundException(error, 'Not Found');
     }
   }
 
   public async getAllTeacherOrders(schoolId: string, teacherId: string) {
-    console.log('called?');
-
     try {
       const ordersData = await this.getAllOrders(schoolId);
       const allOrders: Order[] = ordersData.data;

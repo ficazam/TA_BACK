@@ -194,7 +194,6 @@ export class UsersService {
           throw new UnauthorizedException('This account is inactive.');
       }
     } catch (error) {
-      console.log('===', error);
       throw new InternalServerErrorException(error, 'Error Signing In');
     }
   }
