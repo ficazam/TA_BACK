@@ -9,4 +9,6 @@ export interface Order {
   teacherId: string;
   requiresApproval: boolean;
   items: { itemId: string; amount: number }[];
+  approved?: boolean;
+  approvedById?: boolean;
 }
