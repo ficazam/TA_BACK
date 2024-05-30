@@ -62,9 +62,11 @@ export class OrdersService {
       const ordersData = await this.getAllOrders(schoolId);
       const allOrders: Order[] = ordersData.data;
 
-      allOrders.filter((order) => order.teacherId === teacherId);
+      const filteredOrders = allOrders.filter(
+        (order) => order.teacherId === teacherId,
+      );
 
-      return { success: true, data: allOrders };
+      return { success: true, data: filteredOrders };
     } catch (error) {
       throw new NotFoundException(error, 'Not Found');
     }
