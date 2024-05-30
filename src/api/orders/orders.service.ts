@@ -173,7 +173,12 @@ export class OrdersService {
       const oldOrderData = await orderReference.get();
       const oldOrder = oldOrderData.data();
 
-      const newOrderInfo = { ...oldOrder, ...orderInfo };
+      const newOrderInfo = {
+        ...oldOrder,
+        ...orderInfo,
+        creationDate: new Date(orderInfo.creationDate),
+        deliveryDate: new Date(orderInfo.deliveryDate),
+      };
 
       await orderReference.set(newOrderInfo);
 
