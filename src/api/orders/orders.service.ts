@@ -82,7 +82,14 @@ export class OrdersService {
         .doc(orderId)
         .get();
 
-      return { success: true, data: orderData.data() };
+      const order = orderData.data();
+      const modifiedOrder: Order = {
+        ...order,
+        creationDate: order.creationDate.toDate(),
+        deliveryDate: order.deliveryDate.toDate(),
+      } as Order;
+
+      return { success: true, data: modifiedOrder };
     } catch (error) {
       throw new NotFoundException(error, 'Not Found');
     }
