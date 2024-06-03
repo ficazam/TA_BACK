@@ -116,6 +116,7 @@ export class UsersService {
         role: newUser.role,
         status: newUser.status,
         schoolId: newUser.schoolId,
+        image: newUser.image,
         orders: [],
       };
 
