@@ -145,7 +145,7 @@ export class OrdersService {
 
       const userData = await this.userService.getSingleUser(order.teacherId);
       const user = userData.data;
-      const newUserOrders = { ...user, orders: [...user.orders, order] };
+      const newUserOrders = { ...user, orders: [...user.orders, order.id] };
 
       await this.userService.updateUser(newUserOrders);
 

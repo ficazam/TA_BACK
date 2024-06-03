@@ -147,7 +147,7 @@ export class UsersService {
       const existingUserData = await this.getSingleUser(userData.id!);
       const existingUser = existingUserData.data;
 
-      const newUserData: User = { ...userData, ...existingUser } as User;
+      const newUserData: User = { ...existingUser, ...userData } as User;
 
       await this.firebaseService
         .getFirestore()
