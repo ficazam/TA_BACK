@@ -1,6 +1,5 @@
 import { UserRole } from '../enums/user-role.enum';
 import { UserStatus } from '../enums/user-status.enum';
-import { Order } from './order.type';
 
 export interface User {
   id: string;
@@ -11,5 +10,5 @@ export interface User {
   role: UserRole;
   schoolId?: string;
   status: UserStatus;
-  orders: Order[];
+  orders: string[];
 }

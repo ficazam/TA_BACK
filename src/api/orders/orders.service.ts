@@ -17,12 +17,14 @@ import { ItemsService } from '../items/items.service';
 import { Item } from 'src/core/types/item.type';
 import { OrderStatus } from 'src/core/enums/order-status.enum';
 import { orderValidations } from 'src/core/utils/order-validations.util';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class OrdersService {
   constructor(
     private readonly schoolService: SchoolsService,
     private readonly itemService: ItemsService,
+    private readonly userService: UsersService,
   ) {}
 
   public async getAllOrders(schoolId: string) {
@@ -140,6 +142,12 @@ export class OrdersService {
         .doc(order.id);
 
       await orderReference.set(order);
+
+      const userData = await this.userService.getSingleUser(order.teacherId);
+      const user = userData.data;
+      const newUserOrders = { ...user, orders: [...user.orders, order.id] };
+
+      await this.userService.updateUser(newUserOrders);
 
       return { success: true };
     } catch (error) {
