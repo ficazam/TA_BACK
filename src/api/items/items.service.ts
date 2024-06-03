@@ -13,6 +13,7 @@ import {
 } from 'src/firebase/core/firestore-reference-types.type';
 import { createItemDto } from './DTO/create-item.dto';
 import { v4 } from 'uuid';
+import { itemValidations } from 'src/core/utils/item-validations.utel';
 
 @Injectable()
 export class ItemsService {
@@ -54,14 +55,7 @@ export class ItemsService {
   }
 
   public async createNewItem(newItem: createItemDto) {
-    if (
-      !newItem.name ||
-      !newItem.type ||
-      !newItem.schoolId ||
-      !newItem.inStock ||
-      newItem.ordered === undefined ||
-      newItem.isTemporal === undefined
-    ) {
+    if (!itemValidations(newItem)) {
       throw new BadRequestException(
         'Incomplete item data, please fill in all fields.',
       );
