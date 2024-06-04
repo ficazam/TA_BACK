@@ -20,7 +20,8 @@ import { createUserDto } from './DTO';
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { UserStatus } from 'src/core/enums/user-status.enum';
 import { userValidations } from 'src/core/utils/user-validations.util';
-import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from 'src/firebase/firebase';
 
 @Injectable()
 export class UsersService {
@@ -73,13 +74,15 @@ export class UsersService {
 
   private async createAuthUser(email: string, password: string) {
     try {
-      const auth = this.firebaseService.getAuth();
-      const nonAdminAuth = getAuth();
+      const adminAuth = this.firebaseService.getAuth();
 
-      const userRef: UserRecord = await auth.createUser({ email, password });
+      const userRef: UserRecord = await adminAuth.createUser({
+        email,
+        password,
+      });
 
       if (userRef) {
-        await sendPasswordResetEmail(nonAdminAuth, email);
+        await sendPasswordResetEmail(auth, email);
       }
 
       return userRef;
