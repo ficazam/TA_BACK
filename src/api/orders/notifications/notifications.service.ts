@@ -21,6 +21,7 @@ export class NotificationService {
         });
       });
 
+
       await firebaseAdmin.messaging().sendEach(messages);
     } catch (error) {
       console.error(error);
