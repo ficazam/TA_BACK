@@ -11,4 +11,5 @@ export interface User {
   schoolId?: string;
   status: UserStatus;
   orders: string[];
+  notificationToken?: string;
 }
