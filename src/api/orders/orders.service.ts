@@ -18,6 +18,8 @@ import { Item } from 'src/core/types/item.type';
 import { OrderStatus } from 'src/core/enums/order-status.enum';
 import { orderValidations } from 'src/core/utils/order-validations.util';
 import { UsersService } from '../users/users.service';
+import { UserRole } from 'src/core/enums/user-role.enum';
+import { NotificationService } from './notifications/notifications.service';
 
 @Injectable()
 export class OrdersService {
@@ -25,6 +27,7 @@ export class OrdersService {
     private readonly schoolService: SchoolsService,
     private readonly itemService: ItemsService,
     private readonly userService: UsersService,
+    private readonly notificationsService: NotificationService,
   ) {}
 
   public async getAllOrders(schoolId: string) {
@@ -149,6 +152,25 @@ export class OrdersService {
 
       await this.userService.updateUser(newUserOrders);
 
+      //notifications:
+      const schoolUsersData = await this.userService.getAllSchoolUsers(
+        order.schoolId,
+      );
+
+      const schoolUsers = schoolUsersData.data;
+
+      const notificactionUsers = schoolUsers
+        .filter((user) =>
+          order.requiresApproval
+            ? user.role === UserRole.Coordinator
+            : user.role === UserRole.Inventory,
+        )
+        .map((user) => user.notificationToken);
+
+      await this.notificationsService.sendNewOrderNotifications(
+        notificactionUsers,
+      );
+
       return { success: true };
     } catch (error) {
       throw new NotFoundException(error, 'Not Found');
@@ -184,6 +206,17 @@ export class OrdersService {
       };
 
       await orderReference.set(newOrderInfo);
+
+      //notification:
+      const teacherData = await this.userService.getSingleUser(
+        newOrderInfo.teacherId,
+      );
+
+      const teacherToken = teacherData.data.notificationToken;
+
+      await this.notificationsService.sendOrderUpdatedNotifications(
+        teacherToken,
+      );
 
       return { success: true };
     } catch (error) {
