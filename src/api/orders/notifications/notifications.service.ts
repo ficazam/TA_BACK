@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import * as firebaseAdmin from 'firebase-admin';
 import { Message } from 'firebase-admin/messaging';
-import { appMessaging } from 'src/firebase/firebase';
 
 @Injectable()
 export class NotificationService {
@@ -21,7 +21,8 @@ export class NotificationService {
         });
       });
 
-      await appMessaging.sendEach(messages);
+
+      await firebaseAdmin.messaging().sendEach(messages);
     } catch (error) {
       console.error(error);
       throw new UnauthorizedException('Disallowed.');
@@ -40,7 +41,7 @@ export class NotificationService {
         notification,
       };
 
-      await appMessaging.send(message);
+      await firebaseAdmin.messaging().send(message);
     } catch (error) {
       console.error(error);
       throw new UnauthorizedException('Disallowed.');
