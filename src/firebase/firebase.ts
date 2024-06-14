@@ -1,7 +1,6 @@
 import * as firebaseAdmin from 'firebase-admin';
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getMessaging } from 'firebase-admin/messaging';
 
 let initializedApp: firebaseAdmin.app.App;
 
@@ -38,6 +37,5 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const appMessaging = getMessaging(app);
 
-export { app, auth, appMessaging };
+export { app, auth };
